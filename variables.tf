@@ -14,3 +14,41 @@ variable "nodered_host_port" {
   type    = number
   default = 8082
 }
+
+# RabbitMQ image with management plugin enabled
+variable "image_rabbitmq" {
+  type    = string
+  default = "rabbitmq:3.13-management"
+}
+
+# Host ports mapped to RabbitMQ container ports
+variable "rabbitmq_management_host_port" {
+  type    = number
+  default = 15673
+}
+
+variable "rabbitmq_amqp_host_port" {
+  type    = number
+  default = 5673
+}
+
+variable "rabbitmq_mqtt_host_port" {
+  type    = number
+  default = 1885
+}
+
+variable "rabbitmq_mqtt_tls_host_port" {
+  type    = number
+  default = 8891
+}
+
+variable "rabbitmq_default_user" {
+  type    = string
+  default = "guest"
+}
+
+variable "rabbitmq_default_pass" {
+  type      = string
+  sensitive = true
+  default   = "guest"
+}
