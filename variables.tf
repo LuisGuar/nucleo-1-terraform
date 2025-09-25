@@ -52,3 +52,37 @@ variable "rabbitmq_default_pass" {
   sensitive = true
   default   = "guest"
 }
+
+# Telegraf image tag
+variable "image_telegraf" {
+  type    = string
+  default = "telegraf:1.30"
+}
+
+# TimescaleDB image
+variable "image_timescaledb" {
+  type    = string
+  default = "timescale/timescaledb-ha:pg17"
+}
+
+# TimescaleDB credentials and database
+variable "timescaledb_user" {
+  type    = string
+  default = "nucleus"
+}
+
+variable "timescaledb_password" {
+  type      = string
+  sensitive = true
+  default   = "password"
+}
+
+variable "timescaledb_database" {
+  type    = string
+  default = "nucleus"
+}
+
+variable "timescaledb_host_port" {
+  type    = number
+  default = 5435
+}

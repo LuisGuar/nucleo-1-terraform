@@ -16,6 +16,9 @@ locals {
   nr_name              = "${var.project}-nodered"
   rabbitmq_name        = "${var.project}-rabbitmq"
   rabbitmq_volume_name = "${var.project}-rabbitmq-data"
+  timescaledb_name     = "${var.project}-timescaledb"
+  timescaledb_volume   = "${var.project}-timescaledb-data"
+  telegraf_name        = "${var.project}-telegraf"
 }
 
 # Network (shared for later services)
@@ -83,6 +86,31 @@ resource "docker_volume" "rabbitmq_data" {
   }
 }
 
+# TimescaleDB volume
+resource "docker_volume" "timescaledb_data" {
+  name = local.timescaledb_volume
+
+  labels {
+    label = "com.docker.compose.project"
+    value = var.project
+  }
+
+  labels {
+    label = "com.docker.compose.service"
+    value = "timescaledb"
+  }
+
+  labels {
+    label = "com.nucleo.project"
+    value = var.project
+  }
+
+  labels {
+    label = "com.nucleo.service"
+    value = "timescaledb"
+  }
+}
+
 # Pull Node-RED image
 resource "docker_image" "nodered" {
   name = var.image_nodered
@@ -91,6 +119,16 @@ resource "docker_image" "nodered" {
 # Pull RabbitMQ image
 resource "docker_image" "rabbitmq" {
   name = var.image_rabbitmq
+}
+
+# Pull Telegraf image
+resource "docker_image" "telegraf" {
+  name = var.image_telegraf
+}
+
+# Pull TimescaleDB image
+resource "docker_image" "timescaledb" {
+  name = var.image_timescaledb
 }
 
 # Node-RED container
@@ -214,6 +252,98 @@ resource "docker_container" "rabbitmq" {
     source    = "${path.cwd}/rabbitmq/entrypoint.sh"
     read_only = true
   }
+}
+
+# TimescaleDB container
+resource "docker_container" "timescaledb" {
+  name    = local.timescaledb_name
+  image   = docker_image.timescaledb.image_id
+  restart = "always"
+
+  labels {
+    label = "com.docker.compose.project"
+    value = var.project
+  }
+
+  labels {
+    label = "com.docker.compose.service"
+    value = "timescaledb"
+  }
+
+  labels {
+    label = "com.nucleo.project"
+    value = var.project
+  }
+
+  labels {
+    label = "com.nucleo.service"
+    value = "timescaledb"
+  }
+
+  networks_advanced {
+    name = docker_network.net.name
+  }
+
+  env = [
+    "POSTGRES_USER=${var.timescaledb_user}",
+    "POSTGRES_PASSWORD=${var.timescaledb_password}",
+    "POSTGRES_DB=${var.timescaledb_database}"
+  ]
+
+  ports {
+    internal = 5432
+    external = var.timescaledb_host_port
+    protocol = "tcp"
+  }
+
+  mounts {
+    target = "/var/lib/postgresql/data"
+    type   = "volume"
+    source = docker_volume.timescaledb_data.name
+  }
+}
+
+# Telegraf agent container
+resource "docker_container" "telegraf" {
+  name    = local.telegraf_name
+  image   = docker_image.telegraf.image_id
+  restart = "always"
+
+  labels {
+    label = "com.docker.compose.project"
+    value = var.project
+  }
+
+  labels {
+    label = "com.docker.compose.service"
+    value = "telegraf"
+  }
+
+  labels {
+    label = "com.nucleo.project"
+    value = var.project
+  }
+
+  labels {
+    label = "com.nucleo.service"
+    value = "telegraf"
+  }
+
+  networks_advanced {
+    name = docker_network.net.name
+  }
+
+  mounts {
+    target    = "/etc/telegraf/telegraf.conf"
+    type      = "bind"
+    source    = "${path.cwd}/telegraf/telegraf.conf"
+    read_only = true
+  }
+
+  depends_on = [
+    docker_container.rabbitmq,
+    docker_container.timescaledb
+  ]
 }
 
 output "nodered_url" {
