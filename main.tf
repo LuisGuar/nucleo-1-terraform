@@ -178,7 +178,7 @@ resource "docker_container" "nodered" {
 resource "docker_container" "rabbitmq" {
   name    = local.rabbitmq_name
   image   = docker_image.rabbitmq.image_id
-  restart = "always"
+  restart = "unless-stopped"
 
   labels {
     label = "com.docker.compose.project"
@@ -258,7 +258,7 @@ resource "docker_container" "rabbitmq" {
 resource "docker_container" "timescaledb" {
   name    = local.timescaledb_name
   image   = docker_image.timescaledb.image_id
-  restart = "always"
+  restart = "unless-stopped"
 
   labels {
     label = "com.docker.compose.project"
@@ -307,7 +307,7 @@ resource "docker_container" "timescaledb" {
 resource "docker_container" "telegraf" {
   name    = local.telegraf_name
   image   = docker_image.telegraf.image_id
-  restart = "always"
+  restart = "unless-stopped"
 
   labels {
     label = "com.docker.compose.project"
